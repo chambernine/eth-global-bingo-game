@@ -3,16 +3,15 @@ import { useAuth } from "@/contexts/auth";
 
 export const useWalletConnect = ({ onConnect, onDisconnect }) => {
   const [isConnecting, setIsConnecting] = useState(false);
-  const { loginWithBitkubNext, logout } = useAuth();
+  const { loginWithKinto } = useAuth();
 
   const connectWallet = async (walletType) => {
     try {
       setIsConnecting(true);
       let accounts;
 
-      if (walletType === "bitkubNext") {
-        await loginWithBitkubNext();
-        // await logout();
+      if (walletType === "kinto") {
+        await loginWithKinto();
       } else if (walletType === "metamask") {
       }
 

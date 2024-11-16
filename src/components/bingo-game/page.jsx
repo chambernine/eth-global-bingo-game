@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import "@/styles/bingo-game.scss";
-import bkcService from "@/service/bkcService";
 
 const BingoGame = () => {
   const CALL_INTERVAL = 15; // seconds

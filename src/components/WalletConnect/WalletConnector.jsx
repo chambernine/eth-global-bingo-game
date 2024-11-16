@@ -97,9 +97,9 @@ const WalletConnector = ({ onConnect, onDisconnect }) => {
           </CardHeader>
           <CardContent className="space-y-4">
             <WalletOption
-              name="Bitkub Next"
+              name="Kinto"
               icon="🦁"
-              onClick={() => handleConnectWallet('bitkubNext')}
+              onClick={() => handleConnectWallet('kinto')}
             />
             {/* <WalletOption
               name="MetaMask"

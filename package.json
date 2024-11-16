@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "HTTPS=true SSL_CRT_FILE=dev.kinto.xyz+3.pem SSL_KEY_FILE=dev.kinto.xyz+3-key.pem PORT=3001 HOST=dev.kinto.xyz next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -15,6 +15,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "ethers": "^6.13.4",
+    "kinto-web-sdk": "^1.0.2",
     "lucide-react": "^0.460.0",
     "next": "14.2.18",
     "react": "^18",
