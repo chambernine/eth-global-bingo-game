@@ -1,32 +1,12 @@
 import React, { useState, useEffect } from "react";
 import "@/styles/bingo-game.scss";
-import WalletConnector from "../WalletConnect/WalletConnector";
+import bkcService from "@/service/bkcService";
 
-const handleConnect = (walletData) => {
-  console.log('Wallet connected:', walletData);
-  toast({
-    title: "Welcome to Bingo Game!",
-    description: "Your wallet has been connected successfully.",
-  });
-};
-
-const handleDisconnect = () => {
-  console.log('Wallet disconnected');
-  toast({
-    title: "Wallet Disconnected",
-    description: "Thanks for playing! See you soon.",
-  });
-};
-
-const BingoGame = ({backendActor}) => {
-  const HEADERS = ["B", "I", "N", "G", "O"];
+const BingoGame = () => {
   const CALL_INTERVAL = 15; // seconds
-  
 
-  // Add timer state
+  // Game states
   const [timeUntilNextCall, setTimeUntilNextCall] = useState(CALL_INTERVAL);
-
-  // Your existing states
   const [board, setBoard] = useState(Array(25).fill(null));
   const [clicked, setClicked] = useState(Array(25).fill(false));
   const [canChallenge, setCanChallenge] = useState(false);
@@ -35,10 +15,18 @@ const BingoGame = ({backendActor}) => {
   const [calledNumber, setCalledNumber] = useState(null);
   const [recentCalls, setRecentCalls] = useState([]);
   const [gameIsActive, setGameIsActive] = useState(false);
+  const [playerCount, setPlayerCount] = useState(0);
+  const [remainingPlayers, setRemainingPlayers] = useState(0);
+  const { getCurrentGameState,getPlayerCards,purchaseCard } = bkcService();
 
-  // Initialize board with mock data
+
+  const test = async () => {
+    const res = purchaseCard() ;
+    console.log(res);
+  }
+  // Initialize game
   useEffect(() => {
-    generateCardNumber();
+    test()
   }, []);
 
   // Format time for display
@@ -48,63 +36,73 @@ const BingoGame = ({backendActor}) => {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  //generate card 
-  const generateCardNumber = async () => {
+  // Check if player is in game and get game status
+  const checkGameStatus = async () => {
     try {
-      const [card, error] = await backendActor.generate_card();
-      
-      if (error) {
-        console.log(error);
-        getCard();
-        return;
-      }
-      if (card) {
-        return;
-      } else {
-        alert('No card was generated');
+      // const isInGame = await blockchainService.isInGame();
+      const isInGame = false
+      if (isInGame) {
+        const gameState = await blockchainService.getCurrentGameState();
+        setGameIsActive(gameState.isStarted && !gameState.isEnded);
+        setPlayerCount(gameState.playerCount);
+        
+        const remaining = await blockchainService.getRemainingPlayerCount();
+        setRemainingPlayers(remaining);
       }
     } catch (error) {
-      console.log(error);
+      console.error("Error checking game status:", error);
     }
   };
 
-  const getCard = async () => {
+  // Get or purchase player card
+  const getPlayerCard = async () => {
     try {
-      backendActor.get_card().then((card) => {
-        
-        const numbersArrays = card[0].numbers;
-        
-        const flattenedNumbers = Array.from({ length: 25 }, (_, index) => {
-          const arrayIndex = Math.floor(index / 5);
-          const position = index % 5;
-          
-          return numbersArrays[arrayIndex][position];
-        });
-        const transformedArray = flattenedNumbers.map(value => value === 0 ? "free" : value);
-
-        setBoard(transformedArray);
-        setClicked(Array(25).fill(false))
-      });
-      
+      const cards = await blockchainService.getPlayerCards();
+      if (cards && cards.length > 0) {
+        const transformedBoard = convertCardToBoard(cards);
+        setBoard(transformedBoard);
+        setClicked(Array(25).fill(false));
+      }
     } catch (error) {
-      console.error("Error :", error);
+      console.error("Error getting player card:", error);
     }
   };
 
-  // Modified fetchCalledNumber to reset timers
+  // Purchase new card
+  const purchaseNewCard = async () => {
+    try {
+      const result = await blockchainService.purchaseCard();
+      if (result.numbers) {
+        const transformedBoard = convertCardToBoard(result.numbers);
+        setBoard(transformedBoard);
+        setClicked(Array(25).fill(false));
+      }
+    } catch (error) {
+      console.error("Error purchasing card:", error);
+    }
+  };
+
+  // Convert card numbers to board format
+  const convertCardToBoard = (numbers) => {
+    const transformedArray = numbers.map(value => 
+      parseInt(value) === 0 ? "free" : parseInt(value)
+    );
+    return transformedArray;
+  };
+
+  // Fetch called numbers
   const fetchCalledNumber = async () => {
     try {
-      backendActor.get_game_state().then((val) => {
-        
-        setGameIsActive(val.is_active);
-        let arrayNumbers = Array.from(val.called_numbers).slice(1);
-        if(arrayNumbers.length > 0) {
-          setCalledNumber(arrayNumbers[arrayNumbers.length-1]);
-          setRecentCalls(arrayNumbers.slice(Math.max(0,arrayNumbers.length-7),arrayNumbers.length-1));
-        }
-      });
+      const drawnNumbers = await blockchainService.getDrawnNumbers();
+      if (drawnNumbers.length > 0) {
+        setCalledNumber(drawnNumbers[drawnNumbers.length - 1]);
+        setRecentCalls(drawnNumbers.slice(-7, -1));
+      }
+      
+      const gameState = await blockchainService.getCurrentGameState();
+      setGameIsActive(gameState.isStarted && !gameState.isEnded);
     } catch (error) {
-      console.error("Error in fetchCalledNumber:", error);
+      console.error("Error fetching called number:", error);
     }
   };
 
@@ -123,36 +121,35 @@ const BingoGame = ({backendActor}) => {
     return () => clearInterval(timerInterval);
   }, []);
 
-  // Initial fetch
-  useEffect(() => {
-    fetchCalledNumber();
-  }, []);
-
-  // Your existing functions
+  // Check for winning combinations
   const checkCanChallenge = (clickedSquares) => {
-    // Your existing challenge check logic
+    // Check rows
     for (let i = 0; i < 25; i += 5) {
       if (clickedSquares.slice(i, i + 5).every((square) => square)) return true;
     }
+    // Check columns
     for (let i = 0; i < 5; i++) {
       if ([0, 1, 2, 3, 4].every((j) => clickedSquares[i + j * 5])) return true;
     }
+    // Check diagonals
     if ([0, 6, 12, 18, 24].every((i) => clickedSquares[i])) return true;
     if ([4, 8, 12, 16, 20].every((i) => clickedSquares[i])) return true;
     return false;
   };
 
+  // Handle bingo challenge
   const handleChallenge = async () => {
     setIsChecking(true);
     try {
-      await backendActor.challenge().then((val) => {
-        if (val){
-          setChallengeResult(val ? "success" : "failed");
-          setGameIsActive(false)
-          setCanChallenge(false)
-          setIsChecking(false);
-        }
-      });
+      const txHash = await blockchainService.claimWin();
+      if (txHash) {
+        setChallengeResult("success");
+        setGameIsActive(false);
+        setCanChallenge(false);
+      } else {
+        setChallengeResult("failed");
+      }
+
       setTimeout(() => {
         setChallengeResult(null);
       }, 3000);
@@ -164,6 +161,7 @@ const BingoGame = ({backendActor}) => {
     }
   };
 
+  // Handle square click
   const handleClick = (i) => {
     if (isChecking) return;
     const newClicked = [...clicked];
@@ -172,8 +170,7 @@ const BingoGame = ({backendActor}) => {
     setCanChallenge(checkCanChallenge(newClicked));
   };
 
-  const renderHeader = (letter) => <div className="bingo-header">{letter}</div>;
-
+  // Render board square
   const renderSquare = (i) => {
     const isCalledNumber = board[i] === calledNumber;
     return (
@@ -193,37 +190,44 @@ const BingoGame = ({backendActor}) => {
 
   return (
     <div className="bingo-game">
-      {gameIsActive ?    <div className="called-numbers-display">
-        <div className="current-call">
-          <h2>Current Call</h2>
-          <div className="number">{calledNumber}</div>
-          <div className="timer">
-            <div
-              className="timer-bar"
-              style={{ width: `${(timeUntilNextCall / CALL_INTERVAL) * 100}%` }}
-            ></div>
-            <div className="timer-text">
-              Next number in: {formatTime(timeUntilNextCall)}
+      {gameIsActive ? (
+        <div className="called-numbers-display">
+          <div className="current-call">
+            <h2>Current Call</h2>
+            <div className="number">{calledNumber}</div>
+            <div className="timer">
+              <div
+                className="timer-bar"
+                style={{ width: `${(timeUntilNextCall / CALL_INTERVAL) * 100}%` }}
+              ></div>
+              <div className="timer-text">
+                Next number in: {formatTime(timeUntilNextCall)}
+              </div>
+            </div>
+          </div>
+          <div className="recent-calls">
+            <h3>Recent Calls</h3>
+            <div className="numbers">
+              {recentCalls.map((num, index) => (
+                <div key={index} className="recent-number">
+                  {num}
+                </div>
+              ))}
             </div>
           </div>
         </div>
-        <div className="recent-calls">
-          <h3>Recent Calls</h3>
-          <div className="numbers">
-            {recentCalls.slice(1).map((num, index) => (
-              <div key={index} className="recent-number">
-                {num}
-              </div>
-            ))}
+      ) : (
+        <div>
+          <div className="">
+            <p className="header-text">
+              {remainingPlayers > 0 
+                ? `Waiting for ${remainingPlayers} more players...`
+                : "Waiting for game to start"}
+            </p>
+            <p className="header-text">Current players: {playerCount}</p>
           </div>
         </div>
-      </div> : 
-       <div >
-       <div className="">
-         <p className="header-text">Waiting for player</p>
-       </div>
-     </div>
-      }
+      )}
 
       {challengeResult === "success" && (
         <div className="win-message">BINGO!</div>
@@ -231,29 +235,30 @@ const BingoGame = ({backendActor}) => {
       {challengeResult === "failed" && (
         <div className="fail-message">Not quite right!</div>
       )}
+      
       <div className="bingo-board">
-        <div className="header-row">
-          {HEADERS.map((letter) => renderHeader(letter))}
-        </div>
         {[0, 1, 2, 3, 4].map((row) => (
           <div key={row} className="board-row">
             {[0, 1, 2, 3, 4].map((col) => renderSquare(row * 5 + col))}
           </div>
         ))}
       </div>
+      
       {canChallenge && !isChecking && !challengeResult && (
         <button className="challenge-button" onClick={handleChallenge}>
           Challenge!
         </button>
       )}
+      
       {isChecking && (
         <div className="checking-message">Checking your bingo...</div>
       )}
+      
       <button
         className="challenge-button"
-        onClick={() => getCard()}
+        onClick={purchaseNewCard}
       >
-        Get Card!
+        Get New Card
       </button>
     </div>
   );
