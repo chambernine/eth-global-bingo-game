@@ -4,8 +4,7 @@
   align-items: center;
   padding: 10px;
   position: relative;
-  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-  height: 90vh;
+  background: #1a1a1a;
   margin-bottom: 20px;
   border-radius: 20px;
 
@@ -13,6 +12,13 @@
   .header-text{
     font-size: 20px;
     color : white;
+  }
+
+  .called-container{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
   }
 
 
@@ -263,4 +269,144 @@
   0% { border-color: #f59e0b; }
   50% { border-color: transparent; }
   100% { border-color: #f59e0b; }
+}
+
+$spacing-unit: 0.6rem;
+$border-radius: 8px;
+
+.waiting-room {
+  background: rgba(0, 0, 0, 0.8);
+  padding: $spacing-unit * 2;
+  border-radius: $border-radius;
+  box-shadow: 0 4px 2px rgba(0, 0, 0, 0.1);
+  
+  // Container for all content
+  &__container {
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  // Header section
+  &__header {
+    margin-bottom: $spacing-unit * 2;
+    
+    .header-text {
+      font-size: 1.5rem;
+      color: #ffffff;
+      font-weight: 600;
+      margin: $spacing-unit 0;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      
+      &--animated {
+        animation: pulse 2s infinite;
+      }
+    }
+  }
+
+  // Called container section
+  .called-container-grid {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: $spacing-unit * 2;
+    padding: $spacing-unit;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: $border-radius;
+    margin: $spacing-unit 0;
+    
+    .header-text {
+      font-size: 1.2rem;
+      margin: 0;
+      padding: $spacing-unit;
+      
+      &:first-child {
+        border-right: 1px solid rgba(255, 255, 255, 0.2);
+      }
+    }
+  }
+  .called-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: $spacing-unit * 2;
+    padding: $spacing-unit;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: $border-radius;
+    margin: $spacing-unit 0;
+    
+    .header-text {
+      font-size: 1.2rem;
+      margin: 0;
+      padding: $spacing-unit;
+    }
+  }
+
+  // Grid container for the game board
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: $spacing-unit;
+    margin-top: $spacing-unit * 2;
+    
+    .grid-cell {
+      aspect-ratio: 1;
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid #ffa500;
+      border-radius: $border-radius;
+      transition: all 0.3 ease;
+      
+      &:hover {
+        transform: scale(1.02);
+        background: rgba(255, 255, 255, 0.1);
+        cursor: pointer;
+      }
+    }
+  }
+}
+
+// Animations
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+// Media Queries
+@media (max-width: 768px) {
+  .waiting-room {
+    padding: $spacing-unit;
+    
+    &__grid {
+      gap: $spacing-unit * 0.5;
+    }
+    
+    .called-container-grid {
+      flex-direction: column;
+      gap: $spacing-unit;
+      
+      .header-text:first-child {
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      }
+    }
+  }
+  .waiting-room {
+    padding: $spacing-unit;
+    
+    &__grid {
+      gap: $spacing-unit * 0.5;
+    }
+    
+    .called-container {
+      flex-direction: column;
+      gap: $spacing-unit;
+    }
+  }
 }

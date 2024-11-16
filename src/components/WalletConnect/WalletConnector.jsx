@@ -8,6 +8,7 @@ import { AnimatedModal } from '../ui/AnimatedModal';
 import { WalletOption } from './WalletOption';
 import { WalletInfo } from './WalletInfo';
 import { useAuth } from '@/contexts/auth';
+import Image from 'next/image';
 
 const WalletConnector = ({ onConnect, onDisconnect }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -59,18 +60,22 @@ const WalletConnector = ({ onConnect, onDisconnect }) => {
 
   return (
     <>
-      {isLoggedIn ? (
-        <div className="space-y-4">
-          <WalletInfo 
+    {isLoggedIn ? (
+          <div className="flex items-center justify-between space-x-4">
+            <div className="flex items-center space-x-2">
+              <div className="bg-gray-800 rounded-lg px-4 py-2">
+                <WalletInfo 
             address={userInfo.walletAddress}
           />
-          <Button
-            onClick={handleDisconnect}
-            className="w-full bg-red-500 hover:bg-red-600"
-          >
-            Disconnect Wallet
-          </Button>
-        </div>
+              </div>
+            </div>
+            <Button
+              onClick={handleDisconnect}
+              className="bg-gray-700 hover:bg-gray-600 text-white px-6"
+            >
+              LOGOUT
+            </Button>
+          </div>
       ) : (
         <Button
           onClick={() => setIsModalOpen(true)}
@@ -98,7 +103,13 @@ const WalletConnector = ({ onConnect, onDisconnect }) => {
           <CardContent className="space-y-4">
             <WalletOption
               name="Bitkub Next"
-              icon="🦁"
+              icon={<Image
+                  src="/img/bkc.png"
+                  width={26}
+                  height={18}
+                  alt="Chain icon"
+                />
+              }
               onClick={() => handleConnectWallet('bitkubNext')}
             />
             {/* <WalletOption

@@ -217,16 +217,23 @@ const BingoGame = () => {
           </div>
         </div>
       ) : (
-        <div>
-          <div className="">
-            <p className="header-text">
+        <div class="waiting-room">
+        <div class="waiting-room__container">
+          <div class="waiting-room__header">
+            <p class="header-text header-text--animated">
               {remainingPlayers > 0 
                 ? `Waiting for ${remainingPlayers} more players...`
                 : "Waiting for game to start"}
             </p>
-            <p className="header-text">Current players: {playerCount}</p>
+            <div class={recentCalls.length > 0  ? "called-container-grid" : "called-container"}>
+              {recentCalls.length > 0 && 
+                <p class="header-text">Total called : {recentCalls.length}</p>
+              }
+              <p class="header-text">Current players: {playerCount}</p>
+            </div>
           </div>
         </div>
+      </div>
       )}
 
       {challengeResult === "success" && (
