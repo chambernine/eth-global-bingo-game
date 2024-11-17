@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "@/styles/bingo-game.scss";
-import bkcService from "@/service/bkcService";
+import backendService from "@/service/backendService";
+import { useAuth } from '@/contexts/auth';
 
 const BingoGame = () => {
   const CALL_INTERVAL = 15; // seconds
@@ -17,16 +18,18 @@ const BingoGame = () => {
   const [gameIsActive, setGameIsActive] = useState(false);
   const [playerCount, setPlayerCount] = useState(0);
   const [remainingPlayers, setRemainingPlayers] = useState(0);
-  const { getCurrentGameState,getPlayerCards,purchaseCard } = bkcService();
+  const { 
+    getCurrentGameState,
+    getPlayerCards,
+    purchaseCards,
+    challengeWin
+   } = backendService();
+  const { userInfo } = useAuth();
 
-
-  const test = async () => {
-    const res = purchaseCard() ;
-    console.log(res);
-  }
   // Initialize game
   useEffect(() => {
-    test()
+    purchaseNewCard();
+    checkGameStatus();
   }, []);
 
   // Format time for display
@@ -39,16 +42,10 @@ const BingoGame = () => {
   // Check if player is in game and get game status
   const checkGameStatus = async () => {
     try {
-      // const isInGame = await blockchainService.isInGame();
-      const isInGame = false
-      if (isInGame) {
-        const gameState = await blockchainService.getCurrentGameState();
-        setGameIsActive(gameState.isStarted && !gameState.isEnded);
-        setPlayerCount(gameState.playerCount);
+        const gameState = await getCurrentGameState();
         
-        const remaining = await blockchainService.getRemainingPlayerCount();
-        setRemainingPlayers(remaining);
-      }
+        setGameIsActive(gameState.data.is_started && !gameState.data.is_ended);
+        setPlayerCount(gameState.data.player_count);
     } catch (error) {
       console.error("Error checking game status:", error);
     }
@@ -57,9 +54,10 @@ const BingoGame = () => {
   // Get or purchase player card
   const getPlayerCard = async () => {
     try {
-      const cards = await blockchainService.getPlayerCards();
-      if (cards && cards.length > 0) {
-        const transformedBoard = convertCardToBoard(cards);
+      const cards = await getPlayerCards(userInfo.walletAddress);
+      
+      if (cards.data && cards.data.length > 0) {
+        const transformedBoard = convertCardToBoard(cards.data);
         setBoard(transformedBoard);
         setClicked(Array(25).fill(false));
       }
@@ -71,12 +69,7 @@ const BingoGame = () => {
   // Purchase new card
   const purchaseNewCard = async () => {
     try {
-      const result = await blockchainService.purchaseCard();
-      if (result.numbers) {
-        const transformedBoard = convertCardToBoard(result.numbers);
-        setBoard(transformedBoard);
-        setClicked(Array(25).fill(false));
-      }
+      const result = await purchaseCards(userInfo.walletAddress);
     } catch (error) {
       console.error("Error purchasing card:", error);
     }
@@ -93,14 +86,19 @@ const BingoGame = () => {
   // Fetch called numbers
   const fetchCalledNumber = async () => {
     try {
-      const drawnNumbers = await blockchainService.getDrawnNumbers();
+
+      const res = await getCurrentGameState();
+      const gameState = res.data;
+      
+      let drawnNumbers = res.data.drawn_numbers;
+      
+      
       if (drawnNumbers.length > 0) {
         setCalledNumber(drawnNumbers[drawnNumbers.length - 1]);
         setRecentCalls(drawnNumbers.slice(-7, -1));
       }
-      
-      const gameState = await blockchainService.getCurrentGameState();
-      setGameIsActive(gameState.isStarted && !gameState.isEnded);
+      setGameIsActive(gameState.is_started && !gameState.is_ended);
+      setPlayerCount(gameState.player_count);
     } catch (error) {
       console.error("Error fetching called number:", error);
     }
@@ -141,15 +139,12 @@ const BingoGame = () => {
   const handleChallenge = async () => {
     setIsChecking(true);
     try {
-      const txHash = await blockchainService.claimWin();
-      if (txHash) {
-        setChallengeResult("success");
-        setGameIsActive(false);
-        setCanChallenge(false);
-      } else {
-        setChallengeResult("failed");
-      }
-
+      const {data} = await challengeWin(userInfo.walletAddress);
+    if (data) {
+      setChallengeResult("success");
+    }else {
+      setChallengeResult("failed");
+    }
       setTimeout(() => {
         setChallengeResult(null);
       }, 3000);
@@ -263,7 +258,7 @@ const BingoGame = () => {
       
       <button
         className="challenge-button"
-        onClick={purchaseNewCard}
+        onClick={getPlayerCard}
       >
         Get New Card
       </button>

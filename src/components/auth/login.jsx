@@ -5,6 +5,7 @@ import WalletConnector from '@/components/WalletConnect/WalletConnector';
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from '@/contexts/auth';
 import BingoGame from '../bingo-game/page';
+import Image from 'next/image';
 
 
 export default function LoginPage() {
@@ -34,10 +35,16 @@ export default function LoginPage() {
         <div className="absolute inset-0 bg-gradient-to-tr from-dark-gray-1 to-dark-gray-2" />
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iMTAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxwYXR0ZXJuIGlkPSJncmlkIiB3aWR0aD0iNTYiIGhlaWdodD0iMTAwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDU2IDAgTCAwIDAgMCAxMDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzk0YTNiOCIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-10" />
       </div>
-      <div className='flex flex-col gap-6 w-full max-w-md'>
+      <div className='flex flex-col gap-4 w-full max-w-md'>
       {/* Main Card */}
       <Card className="w-full max-w-md z-10 bg-[#1a1a1a] rounded-[20px]">
-        <CardHeader className="space-y-1">
+        <CardHeader className="space-y-1 items-center gap-1">
+        <Image
+                  src="/img/game_club_icon.png"
+                  width={40}
+                  height={40}
+                  alt="Chain icon"
+                />
           <CardTitle className="text-4xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">
             Bingo Game
           </CardTitle>
@@ -53,7 +60,7 @@ export default function LoginPage() {
           </div>}
           
           {/* Wallet Connector Component */}
-          <div className={ isLoggedIn ?  '': 'mt-20'}>
+          <div className={ isLoggedIn ?  '': 'mt-8'}>
             <WalletConnector 
             onConnect={handleConnect}
             onDisconnect={handleDisconnect}
@@ -65,7 +72,7 @@ export default function LoginPage() {
       </div>
       {/* Footer */}
       <div className="absolute bottom-4 left-4 right-4 text-center text-gray-500 text-sm">
-        &copy; 2024 Mini Game Club. All rights reserved.
+        &copy; 2024 Mini Games Club. All rights reserved.
       </div>
     </div>
   );
