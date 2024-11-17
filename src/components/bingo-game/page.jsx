@@ -18,6 +18,7 @@ const BingoGame = () => {
   const [gameIsActive, setGameIsActive] = useState(false);
   const [playerCount, setPlayerCount] = useState(0);
   const [remainingPlayers, setRemainingPlayers] = useState(0);
+  const [totalCalled, setTotalCalled] = useState(0);
   const { 
     getCurrentGameState,
     getPlayerCards,
@@ -97,6 +98,7 @@ const BingoGame = () => {
         setCalledNumber(drawnNumbers[drawnNumbers.length - 1]);
         setRecentCalls(drawnNumbers.slice(-7, -1));
       }
+      setTotalCalled(res.data.drawn_numbers_count)
       setGameIsActive(gameState.is_started && !gameState.is_ended);
       setPlayerCount(gameState.player_count);
     } catch (error) {
@@ -222,7 +224,7 @@ const BingoGame = () => {
             </p>
             <div class={recentCalls.length > 0  ? "called-container-grid" : "called-container"}>
               {recentCalls.length > 0 && 
-                <p class="header-text">Total called : {recentCalls.length}</p>
+                <p class="header-text">Total called : {totalCalled}</p>
               }
               <p class="header-text">Current players: {playerCount}</p>
             </div>
