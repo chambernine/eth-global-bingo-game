@@ -4,7 +4,7 @@ import backendService from "@/service/backendService";
 import { useAuth } from '@/contexts/auth';
 
 const BingoGame = () => {
-  const CALL_INTERVAL = 15; // seconds
+  const CALL_INTERVAL = 10; // seconds
 
   // Game states
   const [timeUntilNextCall, setTimeUntilNextCall] = useState(CALL_INTERVAL);
